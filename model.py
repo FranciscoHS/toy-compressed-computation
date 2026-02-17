@@ -4,6 +4,7 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Sequence
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 @dataclass
 class Config:
@@ -111,3 +112,27 @@ else:
 		model = pickle.load(f)
 dataset = UniformFeatureDataset(config)
 print("Trained model loss: ", evaluate(model, dataset))
+
+# Look at loss per feature
+batch_size = 10000
+batch, labels = dataset.generate_batch(batch_size)
+with torch.no_grad():
+	outputs = model.forward(batch)
+	# we here average only over the first dimension, i.e., the batch dimension
+	# not over the second dimension, which is the feature dimension
+	loss = ((labels - outputs) ** 2).mean(dim=0)
+
+plt.plot(loss)
+plt.title('MSE per feature')
+plt.xlabel('Feature')
+plt.ylabel('MSE')
+plt.savefig('loss_per_feature.png')
+
+# Look at response per feature
+# First with other features disabled
+# Just a randomly picked feature at first
+
+# I think basically what we need to do is sweep over the range of possible inputs for a single feature
+# And compute the model's output for that input, zeroing out all others
+
+input_sweep = torch.linspace(start=-1, end=1, steps=100)
